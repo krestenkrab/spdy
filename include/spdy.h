@@ -384,7 +384,7 @@ int spdy_stream_get_output_window(spdy_stream *stream);
 
 /* Should be called in response to on_stream_data, when the data has
    been consumed.    */
-void spdy_stream_data_consumed(spdy_stream *stream, size_t size);
+int spdy_stream_data_consumed(spdy_stream *stream, size_t size);
 
 #ifdef __cplusplus
 }

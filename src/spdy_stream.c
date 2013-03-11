@@ -311,7 +311,7 @@ void spdy_stream_delete (spdy_ctx * ctx, spdy_stream * stream)
    free (stream);
 }
 
-void spdy_stream_data_consumed(spdy_stream *stream, size_t size)
+int spdy_stream_data_consumed(spdy_stream *stream, size_t size)
 {
   spdy_ctx *ctx = stream->ctx;
 
@@ -321,6 +321,8 @@ void spdy_stream_data_consumed(spdy_stream *stream, size_t size)
     /* TODO: maybe we should group these, and only emit when
      * less than ctx->window_size/2 is left or something?
      * This is correct, but probably inefficient. */
-    spdy_emit_window_update(ctx, 0, stream->id, size);
+    return spdy_emit_window_update(ctx, 0, stream->id, size);
   }
+
+  return SPDY_E_OK;
 }
