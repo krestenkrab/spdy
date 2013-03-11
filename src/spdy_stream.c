@@ -53,6 +53,7 @@ int spdy_stream_open (spdy_ctx * ctx, spdy_stream ** stream_out,
    stream->id = ctx->next_stream_id;
    stream->flags = SPDY_STREAM_SENT_ACK;
    stream->output_window = ctx->window_size;
+   stream->input_window = ctx->window_size;
 
    if (assoc)
    {
@@ -313,7 +314,10 @@ void spdy_stream_delete (spdy_ctx * ctx, spdy_stream * stream)
 void spdy_stream_data_consumed(spdy_stream *stream, size_t size)
 {
   spdy_ctx *ctx = stream->ctx;
-  if (ctx->version == 3) {
+
+  stream->input_window += size;
+
+  if ((ctx->version == 3) && spdy_stream_open_remote(stream)) {
     /* TODO: maybe we should group these, and only emit when
      * less than ctx->window_size/2 is left or something?
      * This is correct, but probably inefficient. */

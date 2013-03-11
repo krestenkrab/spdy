@@ -51,6 +51,7 @@ struct _spdy_stream
    int ref_count;
 
    int32_t output_window;
+   int32_t input_window;
 
    char flags;
    char priority;

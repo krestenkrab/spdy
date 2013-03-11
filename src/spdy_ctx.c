@@ -53,7 +53,7 @@ spdy_ctx * spdy_ctx_new (const spdy_config * config, int version,
 
    ctx->config = config;
 
-   ctx->window_size = 64 * 1024;
+   ctx->window_size = SPDY_DEFAULT_WINDOW_SIZE;
    for (i = 0; i < num_persisted_settings; i++) {
      if (persisted_settings[i].id == SPDY_SETTINGS_INITIAL_WINDOW_SIZE) {
        ctx->window_size = persisted_settings[i].value;
@@ -180,12 +180,22 @@ static int spdy_proc_data (spdy_ctx * ctx, spdy_buffer * buffer)
 
       ret = SPDY_E_OK;
 
+      if ((ctx->version == 3)
+          && (ctx->flags & SPDY_DATA_FRAME)
+          && stream->input_window < ctx->frame_length)
+      {
+        spdy_stream_close (stream, SPDY_STATUS_FLOW_CONTROL_ERROR);
+        return SPDY_E_PROTOCOL;
+      }
+
       if (ctx->flags & SPDY_DATA_FRAME)
       {
          data_size = buffer->size < ctx->frame_length ?
                         buffer->size : ctx->frame_length;
 
          stream = ctx->frame.data.stream;
+
+         stream->input_window -= data_size;
 
          if (stream && ctx->config->on_stream_data)
          {

@@ -130,6 +130,10 @@ typedef struct _spdy_setting
 
 #define SPDY_FLAG_UNIDIRECTIONAL 2
 
+/* 64k is the default window size assumed when no settings are present */
+
+#define SPDY_DEFAULT_WINDOW_SIZE 65536
+
 
 typedef struct _spdy_ctx spdy_ctx;
 typedef struct _spdy_stream spdy_stream;
@@ -379,7 +383,7 @@ int spdy_stream_get_priority(spdy_stream *stream);
 int spdy_stream_get_output_window(spdy_stream *stream);
 
 /* Should be called in response to on_stream_data, when the data has
-   been processed.  */
+   been consumed.    */
 void spdy_stream_data_consumed(spdy_stream *stream, size_t size);
 
 #ifdef __cplusplus
