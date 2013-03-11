@@ -364,6 +364,9 @@ void spdy_stream_write_data
 
 void spdy_stream_close (spdy_stream *, int status_code);
 
+/* Get the priority of the given stream. */
+int spdy_stream_get_priority(spdy_stream *stream);
+
 
 #ifdef __cplusplus
 }

@@ -106,6 +106,11 @@ void * spdy_stream_get_tag (spdy_stream * stream)
    return stream->tag;
 }
 
+int spdy_stream_get_priority(spdy_stream *stream)
+{
+   return stream->priority;
+}
+
 int spdy_stream_write_headers (spdy_stream * stream, size_t num_headers,
                                spdy_nv_pair * headers, int flags)
 {
