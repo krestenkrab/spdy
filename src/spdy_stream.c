@@ -163,6 +163,9 @@ int spdy_stream_write_headers (spdy_stream * stream, size_t num_headers,
       if ((stream->flags & SPDY_STREAM_CLOSED_HERE) &&
             (stream->flags & SPDY_STREAM_CLOSED_REMOTE))
       {
+        if (ctx->config->on_stream_close)
+          ctx->config->on_stream_close (ctx, stream, 0);
+
          spdy_stream_delete (ctx, stream);
       }
    }
@@ -225,6 +228,9 @@ void spdy_stream_write_data
       if ((stream->flags & SPDY_STREAM_CLOSED_HERE) &&
             (stream->flags & SPDY_STREAM_CLOSED_REMOTE))
       {
+        if (ctx->config->on_stream_close)
+          ctx->config->on_stream_close (ctx, stream, 0);
+
          spdy_stream_delete (ctx, stream);
       }
    }
