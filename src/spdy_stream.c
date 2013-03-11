@@ -196,8 +196,8 @@ void spdy_stream_write_data
 
          spdy_write_int24 (header + 5, size);
 
-         ctx->config->emit (ctx, header, sizeof (header));
-         ctx->config->emit (ctx, data, size);
+         spdy_emitv (ctx, 2, header, sizeof(header),
+                             data, size);
 
          total_size -= size;
          data += size;

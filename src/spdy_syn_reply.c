@@ -118,8 +118,8 @@ static int spdy_emit_syn_reply_draft3 (spdy_ctx * ctx, int8_t flags,
 
    spdy_write_int31 (header + SPDY_CTRL_HEADER_SIZE, stream_id);
 
-   ctx->config->emit (ctx, header, sizeof (header));
-   ctx->config->emit (ctx, nv_buffer, nv_size);
+   spdy_emitv (ctx, 2, header, sizeof(header),
+                       nv_buffer, nv_size);
 
    free (nv_buffer);
 
@@ -148,9 +148,9 @@ static int spdy_emit_syn_reply_draft2 (spdy_ctx * ctx, int8_t flags,
 
    spdy_write_int16
       (header + SPDY_CTRL_HEADER_SIZE + sizeof (stream_id), 0); /* reserved */
-
-   ctx->config->emit (ctx, header, sizeof (header));
-   ctx->config->emit (ctx, nv_buffer, nv_size);
+   
+   spdy_emitv (ctx, 2, header, sizeof(header),
+                       nv_buffer, nv_size);
 
    free (nv_buffer);
 

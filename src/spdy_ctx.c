@@ -33,6 +33,14 @@
 #include "spdy_control.h"
 #include "spdy_zlib.h"
 
+#ifndef _WIN32
+   #include <alloca.h>
+#else
+   #include <malloc.h>
+#endif
+
+#include <stdarg.h>
+
 spdy_ctx * spdy_ctx_new (const spdy_config * config, int version,
                          int num_persisted_settings,
                          spdy_setting * persisted_settings)
@@ -194,6 +202,23 @@ static int spdy_proc_data (spdy_ctx * ctx, spdy_buffer * buffer)
              }
          }
 
+         if (ctx->frame_flags & SPDY_FLAG_FIN)
+         {
+           stream->flags |= SPDY_STREAM_CLOSED_REMOTE;
+
+           if ((stream->flags & SPDY_STREAM_CLOSED_HERE) &&
+               (stream->flags & SPDY_STREAM_CLOSED_REMOTE))
+             {
+
+               if (ctx->frame.data.stream && ctx->config->on_stream_close)
+               {
+                 ctx->config->on_stream_close(ctx, ctx->frame.data.stream, 0);
+               }
+
+               spdy_stream_delete (ctx, stream);
+             }
+         }
+
          buffer->ptr += data_size;
          buffer->size -= data_size;
 
@@ -329,5 +354,53 @@ int spdy_soft_error (spdy_ctx * ctx)
    -- ctx->error_threshold;
 
    return SPDY_E_OK;
+}
+
+void spdy_emitv (spdy_ctx * ctx, size_t num, ...)
+{
+   spdy_iovec * v;
+   va_list list;
+   size_t i = 0;
+   char * emit_buffer;
+   size_t emit_size;
+  
+   if (ctx->config->emitv)
+   {
+      /* emitv is available - build iovec list */
+
+      v = (spdy_iovec *) alloca (sizeof (spdy_iovec *) * num);
+
+      va_start (list, num);
+
+      while (i < num)
+      {
+         v [i].iov_base = va_arg (list, void *);
+         v [i].iov_len = va_arg (list, size_t);
+
+         ++ i;
+      }
+
+      va_end (list);
+
+      ctx->config->emitv (ctx, num, v);
+
+      return;
+   }
+
+   /* emitv not implemented - pass each buffer to emit callback */
+
+   va_start (list, num);
+
+   while (i < num)
+   {
+      emit_buffer = va_arg (list, char *);
+      emit_size = va_arg (list, size_t);
+
+      ctx->config->emit (ctx, emit_buffer, emit_size);
+
+      ++ i;
+   }
+
+   va_end (list);
 }
 
