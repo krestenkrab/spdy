@@ -52,6 +52,7 @@ int spdy_stream_open (spdy_ctx * ctx, spdy_stream ** stream_out,
    stream->ctx = ctx;
    stream->id = ctx->next_stream_id;
    stream->flags = SPDY_STREAM_SENT_ACK;
+   stream->output_window = ctx->window_size;
 
    if (assoc)
    {
@@ -109,6 +110,11 @@ void * spdy_stream_get_tag (spdy_stream * stream)
 int spdy_stream_get_priority(spdy_stream *stream)
 {
    return stream->priority;
+}
+
+int spdy_stream_get_output_window(spdy_stream *stream)
+{
+   return stream->output_window;
 }
 
 int spdy_stream_write_headers (spdy_stream * stream, size_t num_headers,
@@ -203,6 +209,8 @@ void spdy_stream_write_data
 
          spdy_emitv (ctx, 2, header, sizeof(header),
                              data, size);
+
+         stream->output_window -= size;
 
          total_size -= size;
          data += size;
@@ -302,3 +310,13 @@ void spdy_stream_delete (spdy_ctx * ctx, spdy_stream * stream)
    free (stream);
 }
 
+void spdy_stream_data_consumed(spdy_stream *stream, size_t size)
+{
+  spdy_ctx *ctx = stream->ctx;
+  if (ctx->version == 3) {
+    /* TODO: maybe we should group these, and only emit when
+     * less than ctx->window_size/2 is left or something?
+     * This is correct, but probably inefficient. */
+    spdy_emit_window_update(ctx, 0, stream->id, size);
+  }
+}

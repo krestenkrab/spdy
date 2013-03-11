@@ -88,6 +88,10 @@ int spdy_proc_settings (spdy_ctx * ctx, int8_t flags, spdy_buffer * buffer)
       changed [num_changed].persistant
          = entry_flags & FLAG_SETTINGS_PERSIST_VALUE;
 
+      if (entry_id == SPDY_SETTINGS_INITIAL_WINDOW_SIZE) {
+        ctx->window_size = entry_value;
+      }
+
       ++ num_changed;
       ++ i;
    }
@@ -108,6 +112,8 @@ void spdy_emit_settings (spdy_ctx * ctx, int8_t flags, int returning_persisted,
    char entry [8];
    int i = 0;
 
+   /* TODO: pack this frame into a single buffer */
+
    spdy_build_control_header (ctx, header, SETTINGS, flags, 4 + num * 8);
    spdy_write_int32 (header + SPDY_CTRL_HEADER_SIZE, num);
 
@@ -125,6 +131,10 @@ void spdy_emit_settings (spdy_ctx * ctx, int8_t flags, int returning_persisted,
       spdy_write_int24 (entry + 1, settings [i].id);
       spdy_write_int32 (entry + 4, settings [i].value);
       
+      if (settings[i].id == SPDY_SETTINGS_INITIAL_WINDOW_SIZE) {
+        ctx->window_size = settings[i].value;
+      }
+
       ctx->config->emit (ctx, entry, sizeof (entry));
 
       ++ i;

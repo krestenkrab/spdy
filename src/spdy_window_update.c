@@ -36,6 +36,7 @@ int spdy_proc_window_update (spdy_ctx * ctx, int8_t flags, spdy_buffer * buffer)
 {
    spdy_stream * stream;
    int32_t delta_window_size;
+   int64_t window_size;
 
    if (buffer->size != 8)
       return SPDY_E_PROTOCOL;
@@ -49,7 +50,19 @@ int spdy_proc_window_update (spdy_ctx * ctx, int8_t flags, spdy_buffer * buffer)
 
    delta_window_size = spdy_read_int31 (buffer);
 
-   /* TODO */
+   /* TODO: maybe we can do this without 64bit, but stream->output_window can be negative! */
+   window_size = (int64_t)stream->output_window + (int64_t)delta_window_size;
+   if (window_size > 0x7fffffff) {
+     spdy_stream_close(stream, SPDY_STATUS_FLOW_CONTROL_ERROR);
+     return SPDY_E_PROTOCOL;
+   }
+
+   stream->output_window = window_size;
+
+   if (ctx->config->on_window_update)
+   {
+     ctx->config->on_window_update(ctx, stream, stream->output_window);
+   }
 
    return SPDY_E_OK;
 }

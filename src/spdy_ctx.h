@@ -62,6 +62,7 @@ struct _spdy_ctx
    int version;
 
    int error_threshold;
+   size_t window_size;
 
    int32_t last_remote_stream_id;
    int32_t next_stream_id;

@@ -45,12 +45,20 @@ spdy_ctx * spdy_ctx_new (const spdy_config * config, int version,
                          int num_persisted_settings,
                          spdy_setting * persisted_settings)
 {
+   int i;
    spdy_ctx * ctx = (spdy_ctx *) calloc (sizeof (spdy_ctx), 1);
 
    if (!ctx)
       return 0;
 
    ctx->config = config;
+
+   ctx->window_size = 64 * 1024;
+   for (i = 0; i < num_persisted_settings; i++) {
+     if (persisted_settings[i].id == SPDY_SETTINGS_INITIAL_WINDOW_SIZE) {
+       ctx->window_size = persisted_settings[i].value;
+     }
+   }
 
    ctx->init_version = version ? version : 2;
 

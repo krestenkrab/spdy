@@ -50,6 +50,8 @@ struct _spdy_stream
 
    int ref_count;
 
+   int32_t output_window;
+
    char flags;
    char priority;
    char cred_slot;

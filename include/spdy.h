@@ -241,6 +241,10 @@ typedef struct _spdy_config
       (spdy_ctx *, spdy_stream *, const char * data, size_t size);
 
 
+   /* Called when send-buffer size is increased.  window_size is the new total. */
+   void (* on_window_update)
+     (spdy_ctx *, spdy_stream *, size_t window_size);
+
    /* Called when a stream has been closed.  If the status code is != 0,
     * the stream was terminated by the remote endpoint.  Otherwise, the
     * stream was closed normally by becoming half-closed on both ends.
@@ -367,6 +371,16 @@ void spdy_stream_close (spdy_stream *, int status_code);
 /* Get the priority of the given stream. */
 int spdy_stream_get_priority(spdy_stream *stream);
 
+/* Get the current output window for the stream.  This is the number of
+   bytes that can be passed to spdy_stream_write_data without the other
+   end overflowing.  This value is incremented when the peer sends us
+   WINDOW_UPDATE frames.
+*/
+int spdy_stream_get_output_window(spdy_stream *stream);
+
+/* Should be called in response to on_stream_data, when the data has
+   been processed.  */
+void spdy_stream_data_consumed(spdy_stream *stream, size_t size);
 
 #ifdef __cplusplus
 }
